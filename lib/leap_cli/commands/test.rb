@@ -13,7 +13,20 @@ module LeapCli; module Commands
     c.desc 'Run tests'
     c.command :run do |c|
       c.action do |global_options,options,args|
-        log 'not yet implemented'
+        nodes = manager.filter!(args)
+        if nodes.size > 1
+          say "Testing these nodes: #{nodes.keys.join(', ')}"
+          unless agree "Continue? "
+            quit! "OK. Bye."
+          end
+        end
+
+        nodes.keys.sort.each do |node_name|
+          nodes[node_name].services.each do |service|
+            config = "hiera/#{node_name}.yaml"
+            system "rake -f #{Path.provider_base + "/Rakefile"} test SERVICE=#{service} CONFIG=#{config}"
+          end
+        end
       end
     end
 
